@@ -3,8 +3,8 @@ import { defineConfig } from "@playwright/test";
 export default defineConfig({
 	testDir: "./tests/unit",
 
-	/* Run tests in files in parallel */
-	fullyParallel: true,
+	/* Run tests in files in parallel but not within files */
+	fullyParallel: false,
 
 	/* Fail the build on CI if you accidentally left test.only in the source code. */
 	forbidOnly: !!process.env.CI,
@@ -12,8 +12,8 @@ export default defineConfig({
 	/* Retry on CI only */
 	retries: process.env.CI ? 2 : 0,
 
-	/* Opt out of parallel tests on CI. */
-	workers: process.env.CI ? 1 : undefined,
+	/* Use single worker to avoid state conflicts */
+	workers: 1,
 
 	/* Reporter to use. See https://playwright.dev/docs/test-reporters */
 	reporter: "html",

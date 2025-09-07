@@ -15,7 +15,7 @@ This document outlines the **focused unit testing strategy** for the ecommerce s
 
 ## Test Structure - Focused Approach
 
-```
+```bash
 tests/
 ├── unit/
 │   └── api/                    # 15 Critical Tests in 3 Files
