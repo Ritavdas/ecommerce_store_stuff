@@ -9,7 +9,9 @@ import { SAMPLE_PRODUCTS } from "../../fixtures/test-data";
 test.describe("Cart API - Cart Operations", () => {
 	let api: ApiHelper;
 
-	test.beforeEach(async ({}) => {
+	test.beforeEach(async ({ cleanStore }) => {
+		// Use cleanStore fixture to reset state before each test
+		void cleanStore;
 		api = new ApiHelper();
 	});
 

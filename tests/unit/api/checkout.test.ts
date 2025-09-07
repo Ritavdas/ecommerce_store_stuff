@@ -9,7 +9,9 @@ import { SAMPLE_PRODUCTS, TEST_CONSTANTS } from "../../fixtures/test-data";
 test.describe("Checkout API - Core Business Logic", () => {
 	let api: ApiHelper;
 
-	test.beforeEach(async ({}) => {
+	test.beforeEach(async ({ cleanStore }) => {
+		// Use cleanStore fixture to reset state before each test
+		void cleanStore;
 		api = new ApiHelper();
 	});
 

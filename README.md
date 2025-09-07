@@ -1,4 +1,15 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ecommerce Store with Discount System
+
+This is a [Next.js](https://nextjs.org) ecommerce store with an automated discount system. Built with TypeScript, Tailwind CSS, and Playwright testing.
+
+## Features
+
+✅ **Complete Ecommerce API** - Products, cart, checkout, orders
+✅ **Automated Discount System** - Every 3rd order gets 10% discount coupon  
+✅ **Admin Dashboard** - Analytics, discount management, order tracking
+✅ **Full UI Implementation** - Responsive design with cart and checkout
+✅ **Comprehensive Testing** - 15 unit tests with 100% pass rate
+✅ **CI/CD Pipeline** - GitHub Actions with automated testing
 
 ## Getting Started
 
@@ -16,18 +27,77 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Main Store**: Browse products, add to cart, checkout with discounts
+- **Admin Dashboard**: Visit `/admin` for analytics and discount management
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Testing
 
-## Learn More
+Run the comprehensive test suite:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# Run all unit tests
+npm run test:unit
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Run tests in watch mode  
+npm run test:watch
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# View test report
+npx playwright show-report
+```
+
+## CI/CD Pipeline
+
+This project includes a complete GitHub Actions CI/CD pipeline:
+
+- ✅ **Automated Testing** - All tests run on push/PR
+- ✅ **Code Quality** - ESLint and TypeScript checks  
+- ✅ **Build Validation** - Production build verification
+- ✅ **Test Reports** - Detailed HTML test reports
+- ✅ **Vercel Deployment** - Optional auto-deployment
+
+See [docs/CI-CD.md](docs/CI-CD.md) for detailed pipeline documentation.
+
+## API Documentation
+
+### Customer APIs
+- `GET /api/products` - List all products
+- `POST /api/cart` - Create new cart  
+- `POST /api/cart/{id}/items` - Add items to cart
+- `DELETE /api/cart/{id}/items/{productId}` - Remove items
+- `POST /api/checkout` - Process checkout with optional discount
+
+### Admin APIs  
+- `GET /api/admin/stats` - Get comprehensive analytics
+- `POST /api/admin/discount` - Generate discount code manually
+- `GET /api/discount-codes` - List available discount codes
+
+See [docs/PRD.md](docs/PRD.md) for complete API specification.
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── api/           # Next.js API routes
+│   ├── components/    # React components  
+│   ├── admin/         # Admin dashboard
+│   └── page.tsx       # Main store page
+├── lib/
+│   ├── store.ts       # In-memory data store
+│   ├── types.ts       # TypeScript interfaces
+│   └── utils.ts       # Helper functions
+tests/
+├── unit/              # Unit tests (15 tests)
+└── fixtures/          # Test data and helpers
+docs/                  # Documentation
+```
+
+## Documentation
+
+- 📋 **[PRD.md](docs/PRD.md)** - Complete product requirements
+- 🧪 **[TESTING.md](docs/TESTING.md)** - Testing strategy and coverage
+- 🔄 **[CI-CD.md](docs/CI-CD.md)** - GitHub Actions pipeline guide
+- 📝 **[assignment.md](docs/assignment.md)** - Original assignment requirements
 
 ## Deploy on Vercel
 

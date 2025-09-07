@@ -10,7 +10,9 @@ import { Product, DiscountCode } from "@/lib/types";
 test.describe("Admin API - Products & Admin Functionality", () => {
 	let api: ApiHelper;
 
-	test.beforeEach(async ({}) => {
+	test.beforeEach(async ({ cleanStore }) => {
+		// Use cleanStore fixture to reset state before each test
+		void cleanStore;
 		api = new ApiHelper();
 	});
 
@@ -81,6 +83,7 @@ test.describe("Admin API - Products & Admin Functionality", () => {
 		const cart3Response = await api.createCart();
 		const cart3Id = cart3Response.data.data.id;
 		await api.addToCart(cart3Id, SAMPLE_PRODUCTS[2].id, 2);
+		await api.checkout(cart3Id);
 
 		// Get updated stats
 		const updatedStatsResponse = await api.getAdminStats();
