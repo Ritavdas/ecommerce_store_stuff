@@ -8,6 +8,7 @@ interface CartProps {
 	onRemoveItem: (productId: string) => void;
 	onCheckout: (discountCode?: string) => Promise<CheckoutResponse>;
 	isLoading?: boolean;
+	onContinueShopping?: () => void;
 }
 
 export default function Cart({
@@ -15,6 +16,7 @@ export default function Cart({
 	onRemoveItem,
 	onCheckout,
 	isLoading,
+	onContinueShopping,
 }: CartProps) {
 	const [discountCode, setDiscountCode] = useState("");
 	const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -56,6 +58,7 @@ export default function Cart({
 		try {
 			const result = await onCheckout(discountCode || undefined);
 			setCheckoutResult(result);
+			console.log("Checkout successful, result:", result);
 		} catch (error) {
 			console.error("Checkout failed:", error);
 			const errorMessage =
@@ -66,12 +69,24 @@ export default function Cart({
 		}
 	};
 
+	const handleContinueShopping = () => {
+		console.log("Continue shopping clicked, clearing checkout result");
+		setCheckoutResult(null);
+		setDiscountCode("");
+		setCheckoutError(null);
+
+		// Call parent's continue shopping handler if provided
+		if (onContinueShopping) {
+			onContinueShopping();
+		}
+	};
+
 	if (checkoutResult) {
 		return (
-			<div className="bg-white rounded-lg shadow-md p-6">
+			<div className="bg-white rounded-lg shadow-lg border-2 border-green-200 p-6">
 				<div className="text-center">
-					<div className="mb-4">
-						<div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+					<div className="mb-6">
+						<div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
 							<svg
 								className="w-8 h-8 text-green-600"
 								fill="none"
@@ -86,12 +101,20 @@ export default function Cart({
 								/>
 							</svg>
 						</div>
-						<h2 className="text-2xl font-semibold text-green-600 mb-2">
-							Order Placed Successfully!
+						<h2 className="text-2xl font-bold text-green-800 mb-2">
+							🎉 Order Confirmed!
 						</h2>
-						<p className="text-gray-600 mb-4">
-							Order #{checkoutResult.order.orderNumber}
+						<p className="text-gray-600 mb-2">
+							Thank you for your purchase! Your order has been successfully processed.
 						</p>
+						<div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+							<p className="text-green-800 font-semibold">
+								Order #{checkoutResult.order.orderNumber}
+							</p>
+							<p className="text-green-600 text-sm">
+								{new Date(checkoutResult.order.createdAt).toLocaleString()}
+							</p>
+						</div>
 					</div>
 
 					{/* Order Details Section */}
@@ -192,11 +215,8 @@ export default function Cart({
 					)}
 
 					<button
-						onClick={() => {
-							setCheckoutResult(null);
-							setDiscountCode("");
-						}}
-						className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+						onClick={handleContinueShopping}
+						className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
 					>
 						Continue Shopping
 					</button>

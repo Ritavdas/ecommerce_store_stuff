@@ -14,7 +14,7 @@ export default function ClientHomePage({
 	initialProducts,
 }: ClientHomePageProps) {
 	const [cart, setCart] = useState<CartType | null>(null);
-	const [isLoading, setIsLoading] = useState(false);
+	const [loadingProducts, setLoadingProducts] = useState<Set<string>>(new Set());
 	const [error, setError] = useState<string | null>(null);
 	const [discountRefreshTrigger, setDiscountRefreshTrigger] = useState(0);
 
@@ -28,17 +28,23 @@ export default function ClientHomePage({
 			const response = await fetch("/api/cart", { method: "POST" });
 			const data = await response.json();
 			console.log("Create cart response:", data);
-			
+
 			if (data.data) {
 				setCart(data.data);
 				console.log("Cart created successfully:", data.data);
+				setError(null); // Clear any previous errors
+				return data.data;
 			} else {
 				console.error("No cart data in response:", data);
-				setError("Failed to create cart - no data returned");
+				const errorMsg = "Failed to create cart - no data returned";
+				setError(errorMsg);
+				throw new Error(errorMsg);
 			}
 		} catch (error) {
 			console.error("Failed to create cart:", error);
-			setError("Failed to create cart");
+			const errorMsg = error instanceof Error ? error.message : "Failed to create cart";
+			setError(errorMsg);
+			throw error;
 		}
 	};
 
@@ -49,12 +55,14 @@ export default function ClientHomePage({
 		}
 
 		console.log(`Adding to cart: productId=${productId}, quantity=${quantity}, cartId=${cart.id}`);
-		setIsLoading(true);
-		
+
+		// Set loading state for this specific product
+		setLoadingProducts(prev => new Set(prev).add(productId));
+
 		try {
 			const requestBody = { productId, quantity };
 			console.log("Add to cart request body:", requestBody);
-			
+
 			const response = await fetch(`/api/cart/${cart.id}/items`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -80,7 +88,12 @@ export default function ClientHomePage({
 			console.error("Failed to add to cart:", error);
 			setError("Failed to add item to cart");
 		} finally {
-			setIsLoading(false);
+			// Remove loading state for this specific product
+			setLoadingProducts(prev => {
+				const newSet = new Set(prev);
+				newSet.delete(productId);
+				return newSet;
+			});
 		}
 	};
 
@@ -120,6 +133,8 @@ export default function ClientHomePage({
 	): Promise<CheckoutResponse> => {
 		if (!cart) throw new Error("No cart available");
 
+		console.log("Starting checkout process for cart:", cart.id);
+
 		const response = await fetch("/api/checkout", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
@@ -134,12 +149,39 @@ export default function ClientHomePage({
 			throw new Error(data.error);
 		}
 
-		createCart();
-		
+		console.log("Checkout successful, creating new cart...");
+
+		// Clear current cart immediately to prevent further operations
+		setCart(null);
+
+		// Create new cart for future purchases
+		try {
+			await createCart();
+			console.log("New cart created successfully after checkout");
+		} catch (error) {
+			console.error("Failed to create new cart after checkout:", error);
+			// Don't throw here as checkout was successful
+		}
+
 		// Trigger discount banner refresh after checkout
 		setDiscountRefreshTrigger(prev => prev + 1);
-		
+
 		return data.data;
+	};
+
+	const handleContinueShopping = async () => {
+		console.log("Continue shopping requested, ensuring cart is available");
+
+		// If no cart exists, create one
+		if (!cart) {
+			try {
+				await createCart();
+				console.log("New cart created for continued shopping");
+			} catch (error) {
+				console.error("Failed to create cart for continued shopping:", error);
+				setError("Failed to create cart. Please refresh the page.");
+			}
+		}
 	};
 
 	if (error) {
@@ -180,7 +222,7 @@ export default function ClientHomePage({
 								key={product.id}
 								product={product}
 								onAddToCart={addToCart}
-								isLoading={isLoading}
+								isLoading={loadingProducts.has(product.id)}
 							/>
 						))}
 					</div>
@@ -193,7 +235,8 @@ export default function ClientHomePage({
 					cart={cart}
 					onRemoveItem={removeFromCart}
 					onCheckout={handleCheckout}
-					isLoading={isLoading}
+					isLoading={loadingProducts.size > 0}
+					onContinueShopping={handleContinueShopping}
 				/>
 			</div>
 		</>
