@@ -22,10 +22,17 @@ export default function ClientHomePage({
 
 	const createCart = async () => {
 		try {
+			console.log("Creating cart...");
 			const response = await fetch("/api/cart", { method: "POST" });
 			const data = await response.json();
+			console.log("Create cart response:", data);
+			
 			if (data.data) {
 				setCart(data.data);
+				console.log("Cart created successfully:", data.data);
+			} else {
+				console.error("No cart data in response:", data);
+				setError("Failed to create cart - no data returned");
 			}
 		} catch (error) {
 			console.error("Failed to create cart:", error);
@@ -34,21 +41,38 @@ export default function ClientHomePage({
 	};
 
 	const addToCart = async (productId: string, quantity: number) => {
-		if (!cart) return;
+		if (!cart) {
+			console.error("No cart available for adding items");
+			return;
+		}
 
+		console.log(`Adding to cart: productId=${productId}, quantity=${quantity}, cartId=${cart.id}`);
 		setIsLoading(true);
+		
 		try {
+			const requestBody = { productId, quantity };
+			console.log("Add to cart request body:", requestBody);
+			
 			const response = await fetch(`/api/cart/${cart.id}/items`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ productId, quantity }),
+				body: JSON.stringify(requestBody),
 			});
 
+			console.log("Add to cart response status:", response.status);
 			const data = await response.json();
+			console.log("Add to cart response data:", data);
+
 			if (data.data) {
 				setCart(data.data);
+				console.log("Cart updated successfully:", data.data);
+				setError(null); // Clear any previous errors
 			} else if (data.error) {
+				console.error("API returned error:", data.error);
 				setError(data.error);
+			} else {
+				console.error("Unexpected response format:", data);
+				setError("Unexpected response from server");
 			}
 		} catch (error) {
 			console.error("Failed to add to cart:", error);
@@ -61,6 +85,8 @@ export default function ClientHomePage({
 	const removeFromCart = async (productId: string) => {
 		if (!cart) return;
 
+		console.log(`Removing from cart: productId=${productId}, cartId=${cart.id}`);
+		
 		try {
 			const response = await fetch(
 				`/api/cart/${cart.id}/items/${productId}`,
@@ -69,10 +95,16 @@ export default function ClientHomePage({
 				}
 			);
 
+			console.log("Remove from cart response status:", response.status);
 			const data = await response.json();
+			console.log("Remove from cart response data:", data);
+
 			if (data.data) {
 				setCart(data.data);
+				console.log("Item removed, cart updated:", data.data);
+				setError(null);
 			} else if (data.error) {
+				console.error("API returned error:", data.error);
 				setError(data.error);
 			}
 		} catch (error) {

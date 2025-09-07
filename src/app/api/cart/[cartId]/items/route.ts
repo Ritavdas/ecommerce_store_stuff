@@ -68,7 +68,7 @@ export async function POST(
 
 		const updatedCart = updateCart(cart);
 
-		return NextResponse.json(createSuccessResponse({ cart: updatedCart }));
+		return NextResponse.json(createSuccessResponse(updatedCart));
 	} catch (error) {
 		console.error("Error adding item to cart:", error);
 		return NextResponse.json(

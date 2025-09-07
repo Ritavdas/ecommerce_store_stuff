@@ -25,7 +25,7 @@ export async function GET(
 			);
 		}
 
-		return NextResponse.json(createSuccessResponse({ cart }));
+		return NextResponse.json(createSuccessResponse(cart));
 	} catch (error) {
 		console.error("Error fetching cart:", error);
 		return NextResponse.json(

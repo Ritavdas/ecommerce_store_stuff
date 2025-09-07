@@ -40,7 +40,7 @@ export async function DELETE(
 		cart.items.splice(itemIndex, 1);
 		const updatedCart = updateCart(cart);
 
-		return NextResponse.json(createSuccessResponse({ cart: updatedCart }));
+		return NextResponse.json(createSuccessResponse(updatedCart));
 	} catch (error) {
 		console.error("Error removing item from cart:", error);
 		return NextResponse.json(

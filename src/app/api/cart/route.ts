@@ -6,7 +6,7 @@ export async function POST() {
 	try {
 		const cart = createCart();
 
-		return NextResponse.json(createSuccessResponse({ cart }), {
+		return NextResponse.json(createSuccessResponse(cart), {
 			status: 201,
 		});
 	} catch (error) {

@@ -21,11 +21,24 @@ export default function Cart({
 	const [checkoutResult, setCheckoutResult] =
 		useState<CheckoutResponse | null>(null);
 
-	if (!cart || !cart.items || cart.items.length === 0) {
+	// Debug logging
+	console.log("Cart component render - cart state:", cart);
+
+	if (!cart) {
+		return (
+			<div className="bg-white rounded-lg shadow-md p-6">
+				<h2 className="text-xl font-semibold mb-4">Your Cart</h2>
+				<p className="text-gray-500">Loading cart...</p>
+			</div>
+		);
+	}
+
+	if (!cart.items || cart.items.length === 0) {
 		return (
 			<div className="bg-white rounded-lg shadow-md p-6">
 				<h2 className="text-xl font-semibold mb-4">Your Cart</h2>
 				<p className="text-gray-500">Your cart is empty</p>
+				<p className="text-xs text-gray-400 mt-2">Cart ID: {cart.id}</p>
 			</div>
 		);
 	}
