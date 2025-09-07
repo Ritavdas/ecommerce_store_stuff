@@ -277,11 +277,11 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "if (pm.response.code === 200) {",
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
                   "    const response = pm.response.json();",
-                  "    if (response.data && response.data.code) {",
-                  "        pm.collectionVariables.set('discountCode', response.data.code);",
-                  "        console.log('Manual discount code saved:', response.data.code);",
+                  "    if (response.data && response.data.discountCode) {",
+                  "        pm.collectionVariables.set('discountCode', response.data.discountCode.code);",
+                  "        console.log('Manual discount code saved:', response.data.discountCode.code);",
                   "    }",
                   "}"
                 ]

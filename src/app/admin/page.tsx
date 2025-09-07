@@ -42,11 +42,16 @@ export default function AdminPage() {
 			});
 
 			const data = await response.json();
-			if (data.data) {
-				setSuccessMessage(`Generated discount code: ${data.data.code}`);
+			console.log("Manual discount generation response:", data);
+			
+			if (data.data && data.data.discountCode) {
+				setSuccessMessage(`Generated discount code: ${data.data.discountCode.code}`);
 				fetchStats(); // Refresh stats
 			} else if (data.error) {
 				setError(data.error);
+			} else {
+				console.error("Unexpected response format:", data);
+				setError("Unexpected response format");
 			}
 		} catch (error) {
 			console.error("Failed to generate discount code:", error);
