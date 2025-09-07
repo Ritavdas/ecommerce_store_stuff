@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { AdminStats, DiscountCode } from "@/lib/types";
+import { AdminStats, DiscountCode, Order } from "@/lib/types";
 
 export default function AdminPage() {
 	const [stats, setStats] = useState<AdminStats | null>(null);
@@ -207,6 +207,32 @@ export default function AdminPage() {
 								)}
 							</div>
 						</div>
+
+						{/* Detailed Orders Section */}
+						<div className="mt-8 bg-white rounded-lg shadow-md p-6">
+							<h2 className="text-xl font-semibold mb-4">
+								📋 Order History
+							</h2>
+
+							{stats.orders && stats.orders.length === 0 ? (
+								<p className="text-gray-500">No orders placed yet.</p>
+							) : (
+								<div className="space-y-4">
+									{stats.orders
+										?.sort(
+											(a: Order, b: Order) =>
+												new Date(b.createdAt).getTime() -
+												new Date(a.createdAt).getTime()
+										)
+										.map((order: Order) => (
+											<OrderDetailCard
+												key={order.id}
+												order={order}
+											/>
+										))}
+								</div>
+							)}
+						</div>
 					</>
 				)}
 			</main>
@@ -287,6 +313,86 @@ function DiscountCodeItem({ discountCode }: { discountCode: DiscountCode }) {
 				>
 					{discountCode.isUsed ? "Used" : "Available"}
 				</span>
+			</div>
+		</div>
+	);
+}
+
+function OrderDetailCard({ order }: { order: Order }) {
+	const formatDate = (date: string | Date) => {
+		return new Date(date).toLocaleDateString("en-US", {
+			month: "short",
+			day: "numeric",
+			year: "numeric",
+			hour: "2-digit",
+			minute: "2-digit",
+		});
+	};
+
+	const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
+
+	return (
+		<div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+			<div className="flex items-center justify-between mb-3">
+				<div className="flex items-center space-x-3">
+					<span className="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded">
+						Order #{order.orderNumber}
+					</span>
+					<span className="text-sm text-gray-500">
+						{formatDate(order.createdAt)}
+					</span>
+				</div>
+				<div className="text-right">
+					<p className="text-lg font-semibold text-green-600">
+						${order.total.toFixed(2)}
+					</p>
+					{order.discountAmount > 0 && (
+						<p className="text-sm text-green-500">
+							-${order.discountAmount.toFixed(2)} discount
+						</p>
+					)}
+				</div>
+			</div>
+
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<div>
+					<h4 className="font-medium text-gray-900 mb-2">
+						Items ({totalItems} total)
+					</h4>
+					<div className="space-y-1">
+						{order.items.map((item, index) => (
+							<div
+								key={index}
+								className="text-sm text-gray-600 flex justify-between"
+							>
+								<span>
+									Product {item.productId} × {item.quantity}
+								</span>
+								<span>${(item.price * item.quantity).toFixed(2)}</span>
+							</div>
+						))}
+					</div>
+				</div>
+
+				<div>
+					<h4 className="font-medium text-gray-900 mb-2">Order Summary</h4>
+					<div className="space-y-1 text-sm">
+						<div className="flex justify-between">
+							<span className="text-gray-600">Subtotal:</span>
+							<span>${order.subtotal.toFixed(2)}</span>
+						</div>
+						{order.discountCode && (
+							<div className="flex justify-between text-green-600">
+								<span>Discount ({order.discountCode}):</span>
+								<span>-${order.discountAmount.toFixed(2)}</span>
+							</div>
+						)}
+						<div className="flex justify-between font-medium border-t pt-1">
+							<span>Total:</span>
+							<span>${order.total.toFixed(2)}</span>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	);

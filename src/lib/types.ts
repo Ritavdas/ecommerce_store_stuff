@@ -72,6 +72,7 @@ export interface AdminStats {
 	totalDiscountAmount: number;
 	discountCodes: DiscountCode[];
 	unusedDiscountCodes: number;
+	orders: Order[];
 }
 
 export interface AddToCartRequest {

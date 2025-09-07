@@ -41,6 +41,24 @@
       ]
     },
     {
+      "name": "Discount Codes",
+      "item": [
+        {
+          "name": "Get Available Discount Codes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/discount-codes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "discount-codes"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Cart Operations",
       "item": [
         {

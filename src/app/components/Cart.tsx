@@ -20,6 +20,7 @@ export default function Cart({
 	const [isCheckingOut, setIsCheckingOut] = useState(false);
 	const [checkoutResult, setCheckoutResult] =
 		useState<CheckoutResponse | null>(null);
+	const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
 	// Debug logging
 	console.log("Cart component render - cart state:", cart);
@@ -50,11 +51,15 @@ export default function Cart({
 
 	const handleCheckout = async () => {
 		setIsCheckingOut(true);
+		setCheckoutError(null); // Clear previous errors
+		
 		try {
 			const result = await onCheckout(discountCode || undefined);
 			setCheckoutResult(result);
 		} catch (error) {
 			console.error("Checkout failed:", error);
+			const errorMessage = error instanceof Error ? error.message : 'Checkout failed';
+			setCheckoutError(errorMessage);
 		} finally {
 			setIsCheckingOut(false);
 		}
@@ -88,24 +93,64 @@ export default function Cart({
 						</p>
 					</div>
 
+					{/* Order Details Section */}
 					<div className="bg-gray-50 rounded-lg p-4 mb-4">
-						<div className="flex justify-between items-center mb-2">
-							<span>Subtotal:</span>
-							<span>${checkoutResult.order.subtotal.toFixed(2)}</span>
-						</div>
-						{checkoutResult.order.discountAmount > 0 && (
-							<div className="flex justify-between items-center mb-2 text-green-600">
-								<span>
-									Discount ({checkoutResult.order.discountCode}):
-								</span>
-								<span>
-									-${checkoutResult.order.discountAmount.toFixed(2)}
-								</span>
+						<h3 className="font-semibold text-gray-800 mb-3">📦 Order Details</h3>
+						
+						{/* Item List */}
+						<div className="mb-4">
+							<h4 className="text-sm font-medium text-gray-700 mb-2">Items Purchased:</h4>
+							<div className="space-y-2">
+								{checkoutResult.order.items.map((item, index) => (
+									<div key={index} className="flex justify-between items-center text-sm bg-white rounded p-2">
+										<span className="font-medium">Product {item.productId}</span>
+										<div className="text-right">
+											<span className="text-gray-600">
+												${item.price.toFixed(2)} × {item.quantity}
+											</span>
+											<div className="font-medium">
+												${(item.price * item.quantity).toFixed(2)}
+											</div>
+										</div>
+									</div>
+								))}
 							</div>
-						)}
-						<div className="flex justify-between items-center font-semibold text-lg border-t pt-2">
-							<span>Total:</span>
-							<span>${checkoutResult.order.total.toFixed(2)}</span>
+						</div>
+
+						{/* Price Summary */}
+						<div className="border-t pt-3">
+							<div className="flex justify-between items-center mb-2">
+								<span>Subtotal:</span>
+								<span>${checkoutResult.order.subtotal.toFixed(2)}</span>
+							</div>
+							{checkoutResult.order.discountAmount > 0 && (
+								<div className="flex justify-between items-center mb-2 text-green-600">
+									<span>
+										Discount ({checkoutResult.order.discountCode}):
+									</span>
+									<span>
+										-${checkoutResult.order.discountAmount.toFixed(2)}
+									</span>
+								</div>
+							)}
+							<div className="flex justify-between items-center font-semibold text-lg border-t pt-2">
+								<span>Total Paid:</span>
+								<span className="text-green-600">${checkoutResult.order.total.toFixed(2)}</span>
+							</div>
+						</div>
+
+						{/* Order Info */}
+						<div className="mt-4 pt-3 border-t text-sm text-gray-600">
+							<div className="grid grid-cols-2 gap-2">
+								<div>
+									<span className="font-medium">Order ID:</span>
+									<div className="font-mono text-xs">{checkoutResult.order.id}</div>
+								</div>
+								<div>
+									<span className="font-medium">Order Date:</span>
+									<div>{new Date(checkoutResult.order.createdAt).toLocaleDateString()}</div>
+								</div>
+							</div>
 						</div>
 					</div>
 
@@ -170,11 +215,18 @@ export default function Cart({
 						type="text"
 						id="discountCode"
 						value={discountCode}
-						onChange={(e) =>
-							setDiscountCode(e.target.value.toUpperCase())
-						}
+						onChange={(e) => {
+							setDiscountCode(e.target.value.toUpperCase());
+							if (checkoutError) {
+								setCheckoutError(null); // Clear error when user modifies code
+							}
+						}}
 						placeholder="Enter discount code"
-						className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+						className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+							checkoutError 
+								? 'border-red-300 focus:ring-red-500' 
+								: 'border-gray-300 focus:ring-blue-500'
+						}`}
 					/>
 				</div>
 
@@ -184,6 +236,25 @@ export default function Cart({
 						<span>${subtotal.toFixed(2)}</span>
 					</div>
 				</div>
+
+				{checkoutError && (
+					<div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+						<div className="flex items-center">
+							<svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+							</svg>
+							<p className="text-red-800 text-sm">
+								{checkoutError}
+							</p>
+						</div>
+						<button
+							onClick={() => setCheckoutError(null)}
+							className="text-red-600 hover:text-red-800 text-sm underline mt-1"
+						>
+							Dismiss
+						</button>
+					</div>
+				)}
 
 				<button
 					onClick={handleCheckout}

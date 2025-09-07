@@ -160,5 +160,6 @@ export function getStats() {
 		),
 		discountCodes,
 		unusedDiscountCodes: discountCodes.filter((code) => !code.isUsed).length,
+		orders,
 	};
 }

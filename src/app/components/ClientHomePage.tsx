@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Product, Cart as CartType, CheckoutResponse } from "@/lib/types";
 import Cart from "./Cart";
 import ClientProductCard from "./ClientProductCard";
+import DiscountBanner from "./DiscountBanner";
 
 interface ClientHomePageProps {
 	initialProducts: Product[];
@@ -15,6 +16,7 @@ export default function ClientHomePage({
 	const [cart, setCart] = useState<CartType | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [discountRefreshTrigger, setDiscountRefreshTrigger] = useState(0);
 
 	useEffect(() => {
 		createCart();
@@ -133,6 +135,10 @@ export default function ClientHomePage({
 		}
 
 		createCart();
+		
+		// Trigger discount banner refresh after checkout
+		setDiscountRefreshTrigger(prev => prev + 1);
+		
 		return data.data;
 	};
 
@@ -155,6 +161,11 @@ export default function ClientHomePage({
 
 	return (
 		<>
+			{/* Discount Banner - spans full width */}
+			<div className="lg:col-span-3 mb-6">
+				<DiscountBanner refreshTrigger={discountRefreshTrigger} />
+			</div>
+
 			{/* Products Section - spans 2 columns on large screens */}
 			<div className="lg:col-span-2">
 				<h2 className="text-xl font-semibold mb-6">Products</h2>
