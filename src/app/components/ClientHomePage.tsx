@@ -14,9 +14,14 @@ export default function ClientHomePage({
 	initialProducts,
 }: ClientHomePageProps) {
 	const [cart, setCart] = useState<CartType | null>(null);
-	const [loadingProducts, setLoadingProducts] = useState<Set<string>>(new Set());
+	const [loadingProducts, setLoadingProducts] = useState<Set<string>>(
+		new Set()
+	);
 	const [error, setError] = useState<string | null>(null);
 	const [discountRefreshTrigger, setDiscountRefreshTrigger] = useState(0);
+	const [checkoutResult, setCheckoutResult] =
+		useState<CheckoutResponse | null>(null);
+	const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
 	useEffect(() => {
 		createCart();
@@ -42,7 +47,8 @@ export default function ClientHomePage({
 			}
 		} catch (error) {
 			console.error("Failed to create cart:", error);
-			const errorMsg = error instanceof Error ? error.message : "Failed to create cart";
+			const errorMsg =
+				error instanceof Error ? error.message : "Failed to create cart";
 			setError(errorMsg);
 			throw error;
 		}
@@ -54,10 +60,12 @@ export default function ClientHomePage({
 			return;
 		}
 
-		console.log(`Adding to cart: productId=${productId}, quantity=${quantity}, cartId=${cart.id}`);
+		console.log(
+			`Adding to cart: productId=${productId}, quantity=${quantity}, cartId=${cart.id}`
+		);
 
 		// Set loading state for this specific product
-		setLoadingProducts(prev => new Set(prev).add(productId));
+		setLoadingProducts((prev) => new Set(prev).add(productId));
 
 		try {
 			const requestBody = { productId, quantity };
@@ -89,7 +97,7 @@ export default function ClientHomePage({
 			setError("Failed to add item to cart");
 		} finally {
 			// Remove loading state for this specific product
-			setLoadingProducts(prev => {
+			setLoadingProducts((prev) => {
 				const newSet = new Set(prev);
 				newSet.delete(productId);
 				return newSet;
@@ -100,8 +108,10 @@ export default function ClientHomePage({
 	const removeFromCart = async (productId: string) => {
 		if (!cart) return;
 
-		console.log(`Removing from cart: productId=${productId}, cartId=${cart.id}`);
-		
+		console.log(
+			`Removing from cart: productId=${productId}, cartId=${cart.id}`
+		);
+
 		try {
 			const response = await fetch(
 				`/api/cart/${cart.id}/items/${productId}`,
@@ -134,43 +144,60 @@ export default function ClientHomePage({
 		if (!cart) throw new Error("No cart available");
 
 		console.log("Starting checkout process for cart:", cart.id);
+		setCheckoutError(null); // Clear any previous errors
 
-		const response = await fetch("/api/checkout", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				cartId: cart.id,
-				discountCode,
-			}),
-		});
-
-		const data = await response.json();
-		if (data.error) {
-			throw new Error(data.error);
-		}
-
-		console.log("Checkout successful, creating new cart...");
-
-		// Clear current cart immediately to prevent further operations
-		setCart(null);
-
-		// Create new cart for future purchases
 		try {
-			await createCart();
-			console.log("New cart created successfully after checkout");
+			const response = await fetch("/api/checkout", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					cartId: cart.id,
+					discountCode,
+				}),
+			});
+
+			const data = await response.json();
+			if (data.error) {
+				setCheckoutError(data.error);
+				throw new Error(data.error);
+			}
+
+			console.log("Checkout successful, setting result:", data.data);
+
+			// Set the checkout result immediately
+			setCheckoutResult(data.data);
+
+			// Clear current cart immediately to prevent further operations
+			setCart(null);
+
+			// Create new cart for future purchases
+			try {
+				await createCart();
+				console.log("New cart created successfully after checkout");
+			} catch (error) {
+				console.error("Failed to create new cart after checkout:", error);
+				// Don't throw here as checkout was successful
+			}
+
+			// Trigger discount banner refresh after checkout
+			setDiscountRefreshTrigger((prev) => prev + 1);
+
+			return data.data;
 		} catch (error) {
-			console.error("Failed to create new cart after checkout:", error);
-			// Don't throw here as checkout was successful
+			console.error("Checkout failed:", error);
+			const errorMessage =
+				error instanceof Error ? error.message : "Checkout failed";
+			setCheckoutError(errorMessage);
+			throw error;
 		}
-
-		// Trigger discount banner refresh after checkout
-		setDiscountRefreshTrigger(prev => prev + 1);
-
-		return data.data;
 	};
 
 	const handleContinueShopping = async () => {
-		console.log("Continue shopping requested, ensuring cart is available");
+		console.log("Continue shopping requested, clearing checkout result");
+
+		// Clear checkout result and error states
+		setCheckoutResult(null);
+		setCheckoutError(null);
 
 		// If no cart exists, create one
 		if (!cart) {
@@ -178,7 +205,10 @@ export default function ClientHomePage({
 				await createCart();
 				console.log("New cart created for continued shopping");
 			} catch (error) {
-				console.error("Failed to create cart for continued shopping:", error);
+				console.error(
+					"Failed to create cart for continued shopping:",
+					error
+				);
 				setError("Failed to create cart. Please refresh the page.");
 			}
 		}
@@ -237,6 +267,8 @@ export default function ClientHomePage({
 					onCheckout={handleCheckout}
 					isLoading={loadingProducts.size > 0}
 					onContinueShopping={handleContinueShopping}
+					checkoutResult={checkoutResult}
+					checkoutError={checkoutError}
 				/>
 			</div>
 		</>

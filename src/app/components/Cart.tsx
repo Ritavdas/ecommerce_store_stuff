@@ -9,6 +9,8 @@ interface CartProps {
 	onCheckout: (discountCode?: string) => Promise<CheckoutResponse>;
 	isLoading?: boolean;
 	onContinueShopping?: () => void;
+	checkoutResult?: CheckoutResponse | null;
+	checkoutError?: string | null;
 }
 
 export default function Cart({
@@ -17,63 +19,34 @@ export default function Cart({
 	onCheckout,
 	isLoading,
 	onContinueShopping,
+	checkoutResult,
+	checkoutError,
 }: CartProps) {
 	const [discountCode, setDiscountCode] = useState("");
 	const [isCheckingOut, setIsCheckingOut] = useState(false);
-	const [checkoutResult, setCheckoutResult] =
-		useState<CheckoutResponse | null>(null);
-	const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
 	// Debug logging
 	console.log("Cart component render - cart state:", cart);
+	console.log("Cart component render - checkoutResult:", checkoutResult);
 
-	if (!cart) {
-		return (
-			<div className="bg-white rounded-lg shadow-md p-6">
-				<h2 className="text-xl font-semibold mb-4">Your Cart</h2>
-				<p className="text-gray-500">Loading cart...</p>
-			</div>
-		);
-	}
-
-	if (!cart.items || cart.items.length === 0) {
-		return (
-			<div className="bg-white rounded-lg shadow-md p-6">
-				<h2 className="text-xl font-semibold mb-4">Your Cart</h2>
-				<p className="text-gray-500">Your cart is empty</p>
-				<p className="text-xs text-gray-400 mt-2">Cart ID: {cart.id}</p>
-			</div>
-		);
-	}
-
-	const subtotal = cart.items.reduce(
-		(sum, item) => sum + item.price * item.quantity,
-		0
-	);
-
+	// Declare functions before any conditional rendering
 	const handleCheckout = async () => {
 		setIsCheckingOut(true);
-		setCheckoutError(null); // Clear previous errors
 
 		try {
-			const result = await onCheckout(discountCode || undefined);
-			setCheckoutResult(result);
-			console.log("Checkout successful, result:", result);
+			await onCheckout(discountCode || undefined);
+			console.log("Checkout successful");
 		} catch (error) {
 			console.error("Checkout failed:", error);
-			const errorMessage =
-				error instanceof Error ? error.message : "Checkout failed";
-			setCheckoutError(errorMessage);
+			// Error handling is now managed by parent component
 		} finally {
 			setIsCheckingOut(false);
 		}
 	};
 
 	const handleContinueShopping = () => {
-		console.log("Continue shopping clicked, clearing checkout result");
-		setCheckoutResult(null);
+		console.log("Continue shopping clicked");
 		setDiscountCode("");
-		setCheckoutError(null);
 
 		// Call parent's continue shopping handler if provided
 		if (onContinueShopping) {
@@ -81,6 +54,7 @@ export default function Cart({
 		}
 	};
 
+	// Check for checkout result first, before any other conditions
 	if (checkoutResult) {
 		return (
 			<div className="bg-white rounded-lg shadow-lg border-2 border-green-200 p-6">
@@ -105,14 +79,17 @@ export default function Cart({
 							🎉 Order Confirmed!
 						</h2>
 						<p className="text-gray-600 mb-2">
-							Thank you for your purchase! Your order has been successfully processed.
+							Thank you for your purchase! Your order has been
+							successfully processed.
 						</p>
 						<div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
 							<p className="text-green-800 font-semibold">
 								Order #{checkoutResult.order.orderNumber}
 							</p>
 							<p className="text-green-600 text-sm">
-								{new Date(checkoutResult.order.createdAt).toLocaleString()}
+								{new Date(
+									checkoutResult.order.createdAt
+								).toLocaleString()}
 							</p>
 						</div>
 					</div>
@@ -225,6 +202,30 @@ export default function Cart({
 		);
 	}
 
+	if (!cart) {
+		return (
+			<div className="bg-white rounded-lg shadow-md p-6">
+				<h2 className="text-xl font-semibold mb-4">Your Cart</h2>
+				<p className="text-gray-500">Loading cart...</p>
+			</div>
+		);
+	}
+
+	if (!cart.items || cart.items.length === 0) {
+		return (
+			<div className="bg-white rounded-lg shadow-md p-6">
+				<h2 className="text-xl font-semibold mb-4">Your Cart</h2>
+				<p className="text-gray-500">Your cart is empty</p>
+				<p className="text-xs text-gray-400 mt-2">Cart ID: {cart.id}</p>
+			</div>
+		);
+	}
+
+	const subtotal = cart.items.reduce(
+		(sum, item) => sum + item.price * item.quantity,
+		0
+	);
+
 	return (
 		<div className="bg-white rounded-lg shadow-md p-6">
 			<h2 className="text-xl font-semibold mb-4">
@@ -255,9 +256,6 @@ export default function Cart({
 						value={discountCode}
 						onChange={(e) => {
 							setDiscountCode(e.target.value.toUpperCase());
-							if (checkoutError) {
-								setCheckoutError(null); // Clear error when user modifies code
-							}
 						}}
 						placeholder="Enter discount code"
 						className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
@@ -293,12 +291,6 @@ export default function Cart({
 							</svg>
 							<p className="text-red-800 text-sm">{checkoutError}</p>
 						</div>
-						<button
-							onClick={() => setCheckoutError(null)}
-							className="text-red-600 hover:text-red-800 text-sm underline mt-1"
-						>
-							Dismiss
-						</button>
 					</div>
 				)}
 
