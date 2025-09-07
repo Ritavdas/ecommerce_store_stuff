@@ -163,3 +163,11 @@ export function getStats() {
 		orders,
 	};
 }
+
+export function resetStore() {
+	store.carts.clear();
+	store.orders.clear();
+	store.discountCodes.clear();
+	store.orderCounter = 0;
+	// Keep products as they should always be available
+}
