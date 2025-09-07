@@ -1,7 +1,6 @@
 "use client";
 
 import { Product } from "@/lib/types";
-import { useState } from "react";
 
 interface ClientProductCardProps {
 	product: Product;
