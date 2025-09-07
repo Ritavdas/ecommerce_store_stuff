@@ -153,10 +153,10 @@ export default function Cart({
 
 						{/* Order Info */}
 						<div className="mt-4 pt-3 border-t text-sm text-gray-600">
-							<div className="grid grid-cols-2 gap-2">
+							<div className="space-y-3">
 								<div>
 									<span className="font-medium">Order ID:</span>
-									<div className="font-mono text-xs">
+									<div className="font-mono text-xs break-all">
 										{checkoutResult.order.id}
 									</div>
 								</div>

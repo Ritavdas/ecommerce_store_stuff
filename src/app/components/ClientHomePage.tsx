@@ -64,6 +64,13 @@ export default function ClientHomePage({
 			`Adding to cart: productId=${productId}, quantity=${quantity}, cartId=${cart.id}`
 		);
 
+		// Clear checkout result when adding items to cart
+		if (checkoutResult) {
+			console.log("Clearing checkout result due to new item being added");
+			setCheckoutResult(null);
+			setCheckoutError(null);
+		}
+
 		// Set loading state for this specific product
 		setLoadingProducts((prev) => new Set(prev).add(productId));
 
